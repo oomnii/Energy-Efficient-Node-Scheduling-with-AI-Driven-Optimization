@@ -2,7 +2,7 @@
 
 ## Overview
 
-WSN is a full-stack Voronoi-based wireless sensor network scheduler built with a FastAPI backend and a static HTML/CSS/JavaScript frontend. The current mid-review build focuses on:
+this is a full-stack AI-Driven node scheduling in wireless sensor networks built with a FastAPI backend and a static HTML/CSS/JavaScript frontend. The current build focuses on:
 
 - true-proportion field rendering for any width × height
 - Voronoi-based redundant-node shutdown

@@ -1,11 +1,13 @@
-# WSN-01 — Voronoi WSN Scheduler
+Energy-Efficient-Node-Scheduling-with-AI-Driven-Optimization
 
-A FastAPI + HTML/CSS/JS simulator for Voronoi-based node scheduling in wireless sensor networks.
+A FastAPI + HTML/CSS/JS simulator for AI-Driven node scheduling in wireless sensor networks.
 
-🚀 **Live Demo:** [https://voronoi-wsn-scheduler.onrender.com/](https://voronoi-wsn-scheduler.onrender.com/)
-*(Note: If you ended up creating a new Render service with a new name, remember to update this link!)*
+<a href="https://voronoi-wsn-scheduler.onrender.com/" target="_blank">
+  <button>🚀 Live Demo</button>
+</a>
 
 ## Core features
+
 - Voronoi-threshold scheduling with backup nodes
 - Fault tolerance and recovery simulation
 - Initial and final algorithm comparison on the same generated field
@@ -15,17 +17,24 @@ A FastAPI + HTML/CSS/JS simulator for Voronoi-based node scheduling in wireless 
 - Dedicated ML Lab page for model status, history, and dataset previews
 - Density experiments and CSV export
 
-## Mid-review scope
-This mid-review package keeps the project focused on the core WSN scheduling story:
+## Review
+
+This package keeps the project focused on the core WSN scheduling story:
+
 - energy-aware scheduling
 - backup nodes
 - failure and recovery simulation
 - algorithm comparison
 - ML / AI assistance
 
-Map mode is intentionally left out of the visible frontend workflow in this build.
+## Future Scope
+
+- Map mode for visible frontend workflow in this build.
+- Enhance AI/ML model for better performance.
+- Add more features to the project.
 
 ## Run locally
+
 ```bash
 pip install -r web/backend/requirements_web.txt
 python -m uvicorn web.backend.main:app --reload --port 8000
