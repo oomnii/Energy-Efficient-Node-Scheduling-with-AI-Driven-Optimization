@@ -41,3 +41,5 @@ python -m uvicorn web.backend.main:app --reload --port 8000
 ```
 
 Open `http://localhost:8000`.
+## My Contribution
+- Added initial setup improvements
