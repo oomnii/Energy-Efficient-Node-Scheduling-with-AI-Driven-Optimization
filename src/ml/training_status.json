@@ -1,0 +1,59 @@
+{
+  "model_version": 5,
+  "last_trained_at": "2026-03-23 00:14:36 IST",
+  "classifier_accuracy": 0.8577,
+  "regressor_r2": 0.9944,
+  "best_classifier_accuracy": 0.8577,
+  "best_regressor_r2": 0.9944,
+  "total_node_samples": 7590,
+  "total_run_samples": 400,
+  "node_feature_count": 6,
+  "run_feature_count": 9,
+  "training_note": "Stored history now has 7590 node samples and 400 run samples. Each retrain appends new synthetic WSN data, rebuilds a candidate model, and keeps the strongest-scoring saved version so far. Both saved models were refreshed because the new candidate matched or improved the previous best score.",
+  "model_type": "RandomForestClassifier + RandomForestRegressor",
+  "training_basis": "Synthetic WSN simulation data stored locally and reused on every retrain.",
+  "classifier_model_kept": false,
+  "regressor_model_kept": false,
+  "history": [
+    {
+      "model_version": 1,
+      "trained_at": "2026-03-22T18:00:21.085730+00:00",
+      "classifier_accuracy": 0.7368,
+      "regressor_r2": 0.5068,
+      "new_node_samples": 1518,
+      "new_run_samples": 80
+    },
+    {
+      "model_version": 2,
+      "trained_at": "2026-03-22T18:26:28.058731+00:00",
+      "classifier_accuracy": 0.8141,
+      "regressor_r2": 0.7564,
+      "new_node_samples": 1518,
+      "new_run_samples": 80
+    },
+    {
+      "model_version": 3,
+      "trained_at": "2026-03-22T18:27:55.428566+00:00",
+      "classifier_accuracy": 0.8419,
+      "regressor_r2": 0.967,
+      "new_node_samples": 1518,
+      "new_run_samples": 80
+    },
+    {
+      "model_version": 4,
+      "trained_at": "2026-03-22T18:40:38.946586+00:00",
+      "classifier_accuracy": 0.8502,
+      "regressor_r2": 0.9938,
+      "new_node_samples": 1518,
+      "new_run_samples": 80
+    },
+    {
+      "model_version": 5,
+      "trained_at": "2026-03-23 00:14:36 IST",
+      "classifier_accuracy": 0.8577,
+      "regressor_r2": 0.9944,
+      "new_node_samples": 1518,
+      "new_run_samples": 80
+    }
+  ]
+}

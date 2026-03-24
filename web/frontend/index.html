@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WSN</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>">
+  <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+</head>
+<body>
+  <header class="topbar panel">
+    <div>
+      <div class="brand">Energy-Efficient Node Scheduling with AI-Driven Optimization</div>
+      <div class="subtitle">Build focused on energy-aware wireless sensor scheduling, fault recovery, algorithm comparison, and ML-assisted AI scheduling.</div>
+    </div>
+    <div class="topbar-right">
+      <div class="meta-chip">IIIT SURAT</div>
+      <div class="meta-chip" id="statusLine">API: checking…</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar panel">
+      <div class="section-title">Deployment Geometry</div>
+
+      <div class="field range-field">
+        <label class="control-label">Nodes (count) <span class="help" data-tip="Total number of sensor nodes deployed in the field.">?</span></label>
+        <input id="n_nodes" type="range" min="20" max="500" value="120" />
+        <span id="n_nodes_val">120</span>
+      </div>
+
+      <div class="field"><label class="control-label">Field width (m) <span class="help" data-tip="Physical width of the simulated WSN field.">?</span></label><input id="width" type="number" value="100" /></div>
+      <div class="field"><label class="control-label">Field height (m) <span class="help" data-tip="Physical height of the simulated WSN field.">?</span></label><input id="height" type="number" value="100" /></div>
+      <div class="field"><label class="control-label">Sensing radius (m) <span class="help" data-tip="Base sensing reach of each node before sensor-type adjustments.">?</span></label><input id="radius" type="number" value="15" /></div>
+      <div class="field"><label class="control-label">Threshold coeff (× sensing area) <span class="help" data-tip="Mid-review input is capped at 0.020 so the scheduler stays within the supported threshold range used for this build.">?</span></label><input id="th" type="number" min="0" max="0.02" step="0.001" value="0.020" /></div>
+      <div id="thresholdWarning" class="inline-note warning-note hidden">For this mid-review build, threshold coeff is capped at 0.020 to avoid over-pruning the field.</div>
+      <div class="field"><label class="control-label">Seed (repeatability) <span class="help" data-tip="Keeps node placement and algorithm comparison repeatable.">?</span></label><input id="seed" type="number" value="7" /></div>
+
+      <div class="divider"></div>
+      <div class="section-title">Fault & Recovery</div>
+
+      <div class="field toggle-field compact-toggle-row">
+        <label class="control-label">Enable fault tolerance <span class="help" data-tip="Runs round-wise failures and tries to recover coverage using sleeping backup nodes.">?</span></label>
+        <label class="switch"><input id="ft" type="checkbox" checked /><span class="slider"></span></label>
+      </div>
+
+      <div class="field"><label class="control-label">Per-round failure probability <span class="help" data-tip="Applied each round to active nodes. Even small values accumulate over many rounds.">?</span></label><input id="failp" type="number" min="0" max="0.02" step="0.001" value="0.010" /></div>
+      <div id="failureWarning" class="inline-note warning-note hidden">For mid review, keep this between 0.001 and 0.020. Higher values can collapse the network quickly across many rounds.</div>
+
+      <div class="field select-field">
+        <label class="control-label">Failure model <span class="help" data-tip="Controls how failures appear during the round-wise simulation.">?</span></label>
+        <select id="f_model">
+          <option value="random">Random</option>
+          <option value="clustered">Clustered</option>
+          <option value="region">Region</option>
+          <option value="periodic">Periodic</option>
+        </select>
+      </div>
+      <div id="f_model_desc" class="inline-note"></div>
+
+      <div class="field select-field">
+        <label class="control-label">Recovery model <span class="help" data-tip="Controls how backup nodes are reactivated after failures.">?</span></label>
+        <select id="r_model">
+          <option value="greedy_coverage">Greedy Coverage</option>
+          <option value="nearest_backup">Nearest Backup</option>
+        </select>
+      </div>
+      <div id="r_model_desc" class="inline-note"></div>
+
+      <div class="field"><label class="control-label">Rounds (count) <span class="help" data-tip="Number of failure-recovery rounds used for the final dashboard and resilience plots.">?</span></label><input id="rounds" type="number" value="50" min="1" /></div>
+
+      <div class="divider"></div>
+      <div class="section-title">Sensor & AI</div>
+
+      <div class="field select-field">
+        <label class="control-label">Sensor type <span class="help" data-tip="Changes sensing radius and node energy draw based on the selected sensor profile.">?</span></label>
+        <select id="sensor_type">
+          <option value="homogeneous">Homogeneous</option>
+          <option value="heterogeneous">Heterogeneous</option>
+          <option value="temperature">Temperature</option>
+          <option value="humidity">Humidity</option>
+          <option value="motion">Motion</option>
+          <option value="mixed">Mixed Multi-Sensor</option>
+        </select>
+      </div>
+      <div id="sensor_type_desc" class="inline-note"></div>
+
+      <div class="ai-toggle-card">
+        <div class="ai-toggle-head">
+          <div>
+            <div class="ai-toggle-title">Enable AI Scheduling <span class="help" data-tip="Uses the trained local ML model to assist scheduling decisions. Falls back to Voronoi if no model is available.">?</span></div>
+            <div class="ai-toggle-subtitle">Highlights the trained model-driven scheduling mode of WSN</div>
+          </div>
+          <label class="ai-check-btn">
+            <input id="ai" type="checkbox" />
+            <span class="ai-check-box">
+              <span class="ai-check-icon">
+                <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </span>
+              <span class="ai-check-text">AI </span>
+            </span>
+          </label>
+        </div>
+        <div class="ai-toggle-meta">
+          <span id="aiReadyBadge" class="status-badge">Model status: checking…</span>
+        </div>
+      </div>
+
+      <div class="ml-quick panel subtle-panel">
+        <div class="panel-heading">ML Quick Access</div>
+        <p class="panel-copy">Train the local model here. All history, datasets, and detailed ML information stay in the separate <b>ML Lab</b> page.</p>
+        <button id="btnTrainML" class="btn btn-primary full-width">Train ML Model</button>
+        <div id="mlQuickStatus" class="status-card compact-card">Loading latest ML status…</div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="btn-row two-up">
+        <button id="runBtn" class="btn btn-primary">Run Voronoi</button>
+        <button id="compareBtn" class="btn btn-secondary">Compare</button>
+      </div>
+      <div class="btn-row two-up">
+        <button id="expBtn" class="btn btn-secondary">Run experiment</button>
+        <button id="exportBtn" class="btn btn-ghost">Download run CSV</button>
+      </div>
+      <div class="sidebar-note">Main story: save energy by turning redundant nodes into standby backup nodes while keeping sensing coverage high enough for the current field.</div>
+    </aside>
+
+    <section class="content">
+      <div class="tabs panel">
+        <button class="tab active" data-tab="tab_run">Run</button>
+        <button class="tab" data-tab="tab_energy">Energy</button>
+        <button class="tab" data-tab="tab_compare">Compare</button>
+        <button class="tab" data-tab="tab_experiment">Experiments</button>
+        <button class="tab" data-tab="tab_ml">ML Lab</button>
+        <button class="tab" data-tab="tab_about">About</button>
+      </div>
+
+      <section id="tab_run" class="tabpane active">
+        <div class="section-block">
+          <div class="section-head">
+            <h2>Initial Scheduling Dashboard</h2>
+            <p>These cards describe the first scheduling decision before any round-wise failures are injected.</p>
+          </div>
+          <div class="kpi-grid auto-fit">
+            <div class="kpi-card"><div class="kpi-label">Active nodes</div><div id="activeNodes" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Backup nodes</div><div id="backupNodes" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Failed nodes</div><div id="initialFailedNodes" class="kpi-value">0</div></div>
+            <div class="kpi-card"><div class="kpi-label">Coverage</div><div id="coverage" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Energy saved (%)</div><div id="energySaved" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Uncovered area (%)</div><div id="uncoveredPct" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Runtime (ms)</div><div id="algoRuntime" class="kpi-value">-</div></div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-head">
+            <h2>Final Scheduling Dashboard</h2>
+            <p>These cards summarize the network after all configured rounds of failures and recoveries have finished.</p>
+          </div>
+          <div class="kpi-grid auto-fit">
+            <div class="kpi-card"><div class="kpi-label">Active nodes</div><div id="finalActiveNodes" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Backup nodes</div><div id="finalBackupNodes" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Failed nodes</div><div id="finalFailedNodes" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Coverage</div><div id="finalCoverage" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Energy saved (%)</div><div id="finalEnergySaved" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Uncovered area (%)</div><div id="finalUncoveredPct" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Total runtime (ms)</div><div id="finalRuntime" class="kpi-value">-</div></div>
+          </div>
+        </div>
+
+        <div class="panel viz-panel">
+          <div class="viz-header">
+            <div>
+              <h3>Bounded Voronoi field view</h3>
+              <p id="fieldProportionNote" class="muted-text">Canvas preserves the true width:height ratio of the current field.</p>
+            </div>
+            <div class="legend-block">
+              <div class="legend">
+                <span class="legend-item"><span class="dot active"></span> Active = currently ON and sensing</span>
+                <span class="legend-item"><span class="dot backup"></span> Backup / OFF = sleeping standby nodes</span>
+                <span class="legend-item"><span class="dot failed"></span> Failed = unavailable after fault injection</span>
+              </div>
+              <div id="runLegendNote" class="legend-note">Run a simulation to see how many nodes fall in each state.</div>
+            </div>
+          </div>
+          <div id="runVizContainer" class="viz-surface"><svg id="voronoiSvg"></svg></div>
+        </div>
+
+        <div class="chart-grid two-up">
+          <div class="chart-panel"><div id="chartCoverage"></div></div>
+          <div class="chart-panel"><div id="chartActive"></div></div>
+        </div>
+        <div id="runRoundNote" class="note-strip">Round plots explain what happened after failures and recoveries.</div>
+
+        <div class="panel">
+          <div class="section-head compact">
+            <h3>Detailed metrics</h3>
+            <p>These rows mirror the richer metrics included in the run CSV export.</p>
+          </div>
+          <div id="metricsTable" class="metrics-table"></div>
+        </div>
+      </section>
+
+      <section id="tab_energy" class="tabpane">
+        <div class="section-block energy-hero">
+          <div class="section-head">
+            <h2>Energy Saving Dashboard</h2>
+            <p>This page keeps the WSN goal front and center: switch redundant nodes to backup mode, save energy, and extend network lifetime while preserving coverage.</p>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-head">
+            <h2>Initial Energy Dashboard</h2>
+            <p>These cards describe the energy picture right after the first scheduling decision and before any round-wise failures are injected.</p>
+          </div>
+          <div class="kpi-grid energy-metrics-grid">
+            <div class="kpi-card"><div class="kpi-label">Baseline energy / round</div><div id="initialBaselineEnergy" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Scheduled energy / round</div><div id="initialScheduledEnergy" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Coverage</div><div id="initialEnergyCoverage" class="kpi-value">-</div></div>
+            
+            <div class="kpi-card hero-kpi"><div class="kpi-label">Saved energy / round</div><div id="initialSavedEnergyAbs" class="kpi-value">-</div></div>
+            <div class="kpi-card hero-kpi"><div class="kpi-label">Energy saved (%)</div><div id="initialEnergySavedPct" class="kpi-value">-</div></div>
+            <div class="kpi-card hero-kpi"><div class="kpi-label">Lifetime gain (%)</div><div id="initialLifetimeImprovement" class="kpi-value">-</div></div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-head">
+            <h2>Final Energy Dashboard</h2>
+            <p>These cards summarize the energy picture after the configured failures and recovery rounds finish.</p>
+          </div>
+          <div class="kpi-grid energy-metrics-grid">
+            <div class="kpi-card"><div class="kpi-label">Baseline energy / round</div><div id="finalBaselineEnergy" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Scheduled energy / round</div><div id="finalScheduledEnergy" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Active nodes</div><div id="finalEnergyActiveNodes" class="kpi-value">-</div></div>
+
+            <div class="kpi-card hero-kpi"><div class="kpi-label">Saved energy / round</div><div id="finalSavedEnergyAbs" class="kpi-value">-</div></div>
+            <div class="kpi-card hero-kpi"><div class="kpi-label">Energy saved (%)</div><div id="finalEnergySavedPctCard" class="kpi-value">-</div></div>
+            <div class="kpi-card hero-kpi"><div class="kpi-label">Coverage</div><div id="finalEnergyCoverage" class="kpi-value">-</div></div>
+          </div>
+          <div class="kpi-grid two-up energy-mini-grid" style="margin-top: 14px;">
+            <div class="kpi-card"><div class="kpi-label">Average round savings (%)</div><div id="avgRoundEnergySaved" class="kpi-value">-</div></div>
+            <div class="kpi-card"><div class="kpi-label">Recovery success (%)</div><div id="recoverySuccess" class="kpi-value">-</div></div>
+          </div>
+          <div id="energyInsight" class="note-strip energy-note">Run a simulation and compare algorithms to see which method saves the most energy for the current field.</div>
+        </div>
+
+        <div class="chart-grid two-up">
+          <div class="chart-panel"><div id="energyBarChart"></div></div>
+          <div class="chart-panel"><div id="energyRoundChart"></div></div>
+          <div class="chart-panel"><div id="lifetimeChart"></div></div>
+          <div class="chart-panel"><div id="energyTradeoffChart"></div></div>
+        </div>
+      </section>
+
+      <section id="tab_compare" class="tabpane">
+        <div class="section-block">
+          <div class="section-head">
+            <h2>Initial Algorithm Comparison</h2>
+            <p id="compareFairnessNote">All algorithms use the same generated field, sensor assumptions, and no post-round failure injection in this section.</p>
+          </div>
+          <div class="compare-grid five-up">
+            <div class="compare-card"><h3>Voronoi-Threshold</h3><div id="cmp_init_voronoi" class="compare-body">Run compare to see results.</div></div>
+            <div class="compare-card"><h3>Random-Same-OFF</h3><div id="cmp_init_r1" class="compare-body">—</div></div>
+            <div class="compare-card"><h3>Random-Greedy</h3><div id="cmp_init_r2" class="compare-body">—</div></div>
+            <div class="compare-card"><h3>Greedy-Coverage</h3><div id="cmp_init_gc" class="compare-body">—</div></div>
+            <div class="compare-card"><h3>AI-Based</h3><div id="cmp_init_ai" class="compare-body">—</div></div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-head">
+            <h2>Final Algorithm Comparison after Failures / Recovery</h2>
+            <p>Uses the same initial field and then applies the configured rounds, failure probability, failure model, and recovery model.</p>
+          </div>
+          <div class="compare-grid five-up">
+            <div class="compare-card"><h3>Voronoi-Threshold</h3><div id="cmp_final_voronoi" class="compare-body">Run compare to see results.</div></div>
+            <div class="compare-card"><h3>Random-Same-OFF</h3><div id="cmp_final_r1" class="compare-body">—</div></div>
+            <div class="compare-card"><h3>Random-Greedy</h3><div id="cmp_final_r2" class="compare-body">—</div></div>
+            <div class="compare-card"><h3>Greedy-Coverage</h3><div id="cmp_final_gc" class="compare-body">—</div></div>
+            <div class="compare-card"><h3>AI-Based</h3><div id="cmp_final_ai" class="compare-body">—</div></div>
+          </div>
+        </div>
+
+        <div class="panel viz-panel">
+          <div class="viz-header">
+            <div>
+              <h3>Algorithm visualizer</h3>
+              <p class="muted-text">Inspect the same field with one algorithm at a time. Switch between initial and final views without changing the underlying scenario.</p>
+            </div>
+            <div class="compare-summary-wrap">
+              <div id="compareAlgoSummary" class="compare-summary">Run compare to inspect one algorithm at a time.</div>
+              <div class="seg-wrap">
+                <div id="compareStageToggles" class="seg hidden">
+                  <button class="segbtn active" data-stage="initial">Initial view</button>
+                  <button class="segbtn" data-stage="final">Final view</button>
+                </div>
+                <div id="compareToggles" class="seg hidden">
+                  <button class="segbtn active" data-algo="voronoi">Voronoi</button>
+                  <button class="segbtn" data-algo="r1">Random Same OFF</button>
+                  <button class="segbtn" data-algo="r2">Random Greedy</button>
+                  <button class="segbtn" data-algo="gc">Greedy Coverage</button>
+                  <button class="segbtn" data-algo="ai">AI Based</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="vizContainer" class="viz-surface shorter"><svg id="simSvg"></svg></div>
+        </div>
+      </section>
+
+      <section id="tab_experiment" class="tabpane">
+        <div class="section-head">
+          <h2>Density Experiments</h2>
+          <p>Field area is scaled while the node count stays fixed, showing how density influences backup nodes, savings, and lifetime.</p>
+        </div>
+        <div class="chart-grid two-up">
+          <div class="chart-panel"><div id="chartEnergyDensity"></div></div>
+          <div class="chart-panel"><div id="chartBackupDensity"></div></div>
+          <div class="chart-panel"><div id="chartCoverageDensity"></div></div>
+          <div class="chart-panel"><div id="chartLifetimeDensity"></div></div>
+        </div>
+        <div class="panel table-panel">
+          <table id="expTable">
+            <thead>
+              <tr>
+                <th>Field Area (m²)</th>
+                <th>Width (m)</th>
+                <th>Height (m)</th>
+                <th>Density (nodes/m²)</th>
+                <th>Backups</th>
+                <th>Coverage</th>
+                <th>Energy Saved (%)</th>
+                <th>Lifetime (rounds)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <button id="expCsvBtn" class="btn btn-ghost">Download experiment CSV</button>
+      </section>
+
+      <section id="tab_ml" class="tabpane">
+        <div class="section-head">
+          <h2>ML Lab</h2>
+          <p>All model, training, history, and dataset information is kept here so the main workflow stays clean.</p>
+        </div>
+
+        <div class="ml-grid two-col">
+          <div class="panel compact-panel">
+            <div class="section-head compact">
+              <h3>Current trained model</h3>
+              <p>Latest saved status of the local classifier and metric regressor.</p>
+            </div>
+            <div id="mlStatusCard" class="status-card no-top-margin">Loading ML status…</div>
+          </div>
+
+          <div class="panel compact-panel">
+            <div class="section-head compact">
+              <h3>Recent training history</h3>
+              <p>Scroll inside this panel as training versions grow.</p>
+            </div>
+            <div id="mlHistoryList" class="history-list scroll-panel">No training history yet.</div>
+          </div>
+        </div>
+
+        <div class="ml-grid two-col">
+          <div class="panel compact-panel">
+            <div class="section-head compact">
+              <h3>Stored training status</h3>
+              <p>What is currently stored locally and reused on every retrain.</p>
+            </div>
+            <div id="mlMemorySummary" class="status-card no-top-margin">Loading stored ML memory…</div>
+          </div>
+        </div>
+
+        <div class="panel compact-panel">
+          <div class="section-head compact">
+            <h3>Node-level training dataset preview</h3>
+            <p>Rows from the locally stored node dataset used to train the node-state classifier.</p>
+          </div>
+          <div id="nodeMemoryTable" class="memory-table-wrap compact-table-wrap">No node dataset stored yet.</div>
+        </div>
+
+        <div class="panel compact-panel">
+          <div class="section-head compact">
+            <h3>Run-metric training dataset preview</h3>
+            <p>Rows from the locally stored run-level dataset used to train the metric regressor.</p>
+          </div>
+          <div id="runMemoryTable" class="memory-table-wrap compact-table-wrap">No run-metric dataset stored yet.</div>
+        </div>
+      </section>
+
+      <section id="tab_about" class="tabpane">
+        <div class="about-panel panel">
+          <h2>About This Project</h2>
+          <br>
+          <h3>
+            Project Developed by <b>OM SETH</b> |
+            <a href="https://github.com/oomnii/Voronoi-WSN-Scheduler" target="_blank" style="color: #F5DAA7; text-decoration: none;"> View Project on GitHub</a>
+          </h3>
+          <br>
+          <p>This is a wireless sensor network simulator built to show how Voronoi-based scheduling can save energy by turning redundant nodes into standby backup nodes while keeping sensing coverage high.</p>
+
+          <div class="about-grid">
+            <div class="about-card">
+              <h3>Main features</h3>
+              <ul class="tight-list">
+                <li>Voronoi-based node scheduling</li>
+                <li>Backup node concept for energy saving</li>
+                <li>Round-wise fault and recovery simulation</li>
+                <li>Algorithm comparison on the same field</li>
+                <li>AI-assisted scheduling using a local ML model</li>
+                <li>Experiment and CSV export support</li>
+              </ul>
+            </div>
+            <div class="about-card">
+              <h3>Current working</h3>
+              <ul class="tight-list">
+                <li>Generate a node field with a fixed seed</li>
+                <li>Schedule nodes using Voronoi or comparison algorithms</li>
+                <li>Measure coverage, energy saved, and lifetime gain</li>
+                <li>Inject failures round by round</li>
+                <li>Recover coverage using backup nodes</li>
+                <li>Compare both initial and final results clearly</li>
+              </ul>
+            </div>
+            <div class="about-card">
+              <h3>Technology stack</h3>
+              <ul class="tight-list">
+                <li>FastAPI backend</li>
+                <li>HTML, CSS, JavaScript frontend</li>
+                <li>Plotly for charts</li>
+                <li>NumPy, SciPy, and Shapely for simulation geometry</li>
+                <li>scikit-learn for ML</li>
+                <li>Local file-based storage for ML datasets and models</li>
+              </ul>
+            </div>
+            <div class="about-card">
+              <h3>AI / ML part</h3>
+              <ul class="tight-list">
+                <li>Local RandomForest classifier predicts node ON/OFF states</li>
+                <li>Local regressor estimates run-level metrics</li>
+                <li>Retraining appends new synthetic WSN data to stored datasets</li>
+                <li>Main page only gives quick access; full ML details stay in ML Lab</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="about-grid algorithms-grid">
+            <div class="about-card">
+              <h3>Voronoi-Threshold</h3>
+              <p>Uses the bounded Voronoi responsibility area of each node. Nodes with very small unique area are turned into backup nodes.</p>
+            </div>
+            <div class="about-card">
+              <h3>Random-Same-OFF</h3>
+              <p>Turns off the same number of nodes as Voronoi, but randomly. It is used as a weak baseline.</p>
+            </div>
+            <div class="about-card">
+              <h3>Random-Greedy</h3>
+              <p>Tries random removal while checking coverage so the result stays closer to the target coverage.</p>
+            </div>
+            <div class="about-card">
+              <h3>Greedy-Coverage</h3>
+              <p>Keeps only nodes that add useful coverage, so it is a stronger coverage-first heuristic.</p>
+            </div>
+            <div class="about-card">
+              <h3>AI-Based</h3>
+              <p>Uses the trained local ML model to assist scheduling. If no model is present, the system safely falls back to Voronoi.</p>
+            </div>
+          </div>
+
+          <div class="about-card source-card">
+            <h3>Sources</h3>
+            <ul class="tight-list">
+              <li>Scheduling Nodes in Wireless Sensor Networks: A Voronoi Approach — core research basis for scheduling logic</li>
+              <li>FastAPI documentation — backend API structure</li>
+              <li>Plotly documentation — charts and graph rendering</li>
+              <li>NumPy, SciPy, and Shapely documentation — geometry and numerical processing</li>
+              <li>scikit-learn documentation — RandomForest classifier and regressor</li>
+              <li>All simulation metrics, comparison outputs, and ML history shown in the dashboard come from this project’s own implemented logic and stored local datasets.</li>
+            </ul>
+          </div>
+
+          <div class="about-card">
+            <h3>Local run</h3>
+            <pre class="code">pip install -r web/backend/requirements_web.txt
+python -m uvicorn web.backend.main:app --reload --port 8000 
+Then open <b>http://localhost:8000</b></pre>
+            
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

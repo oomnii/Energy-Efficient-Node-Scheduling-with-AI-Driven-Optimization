@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+src/ml/rf_model.pkl
+
+src/ml/rf_metrics_model.pkl
