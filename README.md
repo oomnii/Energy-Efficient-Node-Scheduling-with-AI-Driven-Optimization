@@ -2,6 +2,9 @@
 
 A FastAPI + HTML/CSS/JS simulator for Voronoi-based node scheduling in wireless sensor networks.
 
+🚀 **Live Demo:** [https://voronoi-wsn-scheduler.onrender.com/](https://voronoi-wsn-scheduler.onrender.com/)
+*(Note: If you ended up creating a new Render service with a new name, remember to update this link!)*
+
 ## Core features
 - Voronoi-threshold scheduling with backup nodes
 - Fault tolerance and recovery simulation
